@@ -31,7 +31,7 @@ export function initializePage(group) {
     const data = snapshot.data() || { names: [] };
     const active = data.names.filter(n => n.active);
     if (active.length === 0) {
-      pickedNameDiv.textContent = 'No active names left!';
+      pickedNameDiv.textContent = 'No active names left';
       return;
     }
     const chosen = active[Math.floor(Math.random() * active.length)];
@@ -53,7 +53,7 @@ export function initializePage(group) {
       box.onchange = () => toggleActive(index, box.checked);
 
       const del = document.createElement('button');
-      del.textContent = '❌';
+      del.textContent = '🗑️';
       del.onclick = () => deleteName(index);
 
       li.textContent = person.name + ' ';
