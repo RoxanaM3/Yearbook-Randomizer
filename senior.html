@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Freshman Picker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>Grades</h2>
+      <a href="freshman.html">Freshman</a>
+      <a href="sophomore.html">Sophomore</a>
+      <a href="junior.html">Junior</a>
+      <a href="senior.html">Senior</a>
+    </aside>
+
+    <main>
+      <h1>Freshman Picker</h1>
+      <input type="text" id="nameInput" placeholder="Enter name">
+      <button id="addBtn">Add</button>
+      <button id="pickBtn">Pick Random</button>
+      <div id="pickedName"></div>
+      <ul id="nameList"></ul>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializePage } from './app.js';
+    initializePage('senior');
+  </script>
+</body>
+</html>
