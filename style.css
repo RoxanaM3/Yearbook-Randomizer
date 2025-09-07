@@ -28,6 +28,15 @@ main {
   background: #f1f5f9;
 }
 
+#controls {
+  margin-bottom: 20px;
+}
+
+#nameInput, #addBtn, #massInput, #massAddBtn {
+  display: none; /* hidden until admin unlock */
+  margin: 5px 0;
+}
+
 input, button {
   padding: 0.5rem;
   margin-right: 10px;
