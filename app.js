@@ -8,41 +8,77 @@ export function initializePage(group) {
   const nameList = document.getElementById('nameList');
   const docRef = doc(db, 'students', group);
 
-  // Load real-time data
+// 🔑 Unlock admin via password
+  if (unlockBtn) {
+    unlockBtn.onclick = () => {
+      const entered = prompt("Enter admin password:");
+      if (entered === "Purple60pear") {
+        isAdmin = true;
+        alert("Admin unlocked");
+        if (nameInput) nameInput.style.display = "inline-block";
+        if (addBtn) addBtn.style.display = "inline-block";
+        if (massInput) massInput.style.display = "block";
+        if (massAddBtn) massAddBtn.style.display = "inline-block";
+        renderNamesCache();
+      } else {
+        alert("Wrong password");
+      }
+    };
+  }
+  
+   // Real-time sync
+  let currentNames = [];
   onSnapshot(docRef, (snapshot) => {
     const data = snapshot.data() || { names: [] };
-    renderNames(data.names);
+    currentNames = data.names;
+    renderNames(currentNames);
   });
 
-  // Add name
-  addBtn.onclick = async () => {
-    const newName = nameInput.value.trim();
-    if (!newName) return;
-    const snapshot = await getDoc(docRef);
-    const data = snapshot.data() || { names: [] };
-    data.names.push({ name: newName, active: true });
-    await setDoc(docRef, { names: data.names });
-    nameInput.value = '';
-  };
+  // Add single name
+  if (addBtn) {
+    addBtn.onclick = async () => {
+      if (!isAdmin) return alert("Only admin can add names");
+      const newName = nameInput.value.trim();
+      if (!newName) return;
+      const updated = [...currentNames, { name: newName, active: true }];
+      await setDoc(docRef, { names: updated });
+      nameInput.value = '';
+    };
+  }
 
-  // Pick random name
+  // Add multiple names
+  if (massAddBtn) {
+    massAddBtn.onclick = async () => {
+      if (!isAdmin) return alert("Only admin can add names");
+      const newNames = massInput.value.split("\n").map(n => n.trim()).filter(n => n);
+      if (newNames.length === 0) return;
+      const updated = [...currentNames];
+      newNames.forEach(name => updated.push({ name, active: true }));
+      await setDoc(docRef, { names: updated });
+      massInput.value = '';
+    };
+  }
+
+  // Pick random
   pickBtn.onclick = async () => {
-    const snapshot = await getDoc(docRef);
-    const data = snapshot.data() || { names: [] };
-    const active = data.names.filter(n => n.active);
+    if (currentNames.length === 0) {
+      pickedNameDiv.textContent = "No names available!";
+      return;
+    }
+    const active = currentNames.filter(n => n.active);
     if (active.length === 0) {
-      pickedNameDiv.textContent = 'No active names left';
+      pickedNameDiv.textContent = "No active names left!";
       return;
     }
     const chosen = active[Math.floor(Math.random() * active.length)];
     pickedNameDiv.textContent = chosen.name;
-    const updated = data.names.map(n =>
+    const updated = currentNames.map(n =>
       n.name === chosen.name ? { ...n, active: false } : n
     );
     await setDoc(docRef, { names: updated });
   };
 
-  // Show names
+  // Render
   function renderNames(names) {
     nameList.innerHTML = '';
     names.forEach((person, index) => {
@@ -52,28 +88,34 @@ export function initializePage(group) {
       box.checked = person.active;
       box.onchange = () => toggleActive(index, box.checked);
 
-      const del = document.createElement('button');
-      del.textContent = '🗑️';
-      del.onclick = () => deleteName(index);
-
       li.textContent = person.name + ' ';
       li.prepend(box);
-      li.appendChild(del);
+
+      if (isAdmin) {
+        const del = document.createElement('button');
+        del.textContent = '❌';
+        del.onclick = () => deleteName(index);
+        li.appendChild(del);
+      }
+
       nameList.appendChild(li);
     });
   }
 
+  function renderNamesCache() {
+    renderNames(currentNames);
+  }
+
   async function toggleActive(index, value) {
-    const snapshot = await getDoc(docRef);
-    const names = snapshot.data().names;
-    names[index].active = value;
-    await setDoc(docRef, { names });
+    const updated = [...currentNames];
+    updated[index].active = value;
+    await setDoc(docRef, { names: updated });
   }
 
   async function deleteName(index) {
-    const snapshot = await getDoc(docRef);
-    const names = snapshot.data().names;
-    names.splice(index, 1);
-    await setDoc(docRef, { names });
+    if (!isAdmin) return alert("Only admin can delete names");
+    const updated = [...currentNames];
+    updated.splice(index, 1);
+    await setDoc(docRef, { names: updated });
   }
 }
